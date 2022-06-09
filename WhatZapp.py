@@ -57,7 +57,7 @@ class Zapper():
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
 
-    def wait_return_element(self,xpath:str,timeout:int):
+    def wait_for_element(self,xpath:str,timeout:int):
         """
         Waits until the web eliment becomes visible on page, then finds the element and returns it.
         The element is identified using it's xpath.
@@ -69,7 +69,7 @@ class Zapper():
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
-        text_box = self.wait_return_element(self._textbox_path,timeout)
+        text_box = self.wait_for_element(self._textbox_path,timeout)
         self.send(message,text_box,count)
         time.sleep(1)
 
@@ -85,10 +85,10 @@ class Zapper():
             time.sleep(freq)
         raise ResponseWaitTimeout
 
-    def deploy_bot(self, target:str, prompt:str, parser):
+    def deploy_bot(self, target:str, prompt:str, parser, timeout=180):
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Wait and get the message text box
-        text_box = self.wait_return_element(self._textbox_path,timeout=60)
+        text_box = self.wait_for_element(self._textbox_path,timeout=120)
         # Send initial prompt message to target
         self.send(prompt,text_box)
         # Get current incoming messages
@@ -96,7 +96,7 @@ class Zapper():
 
         while True:
             # Wait and get new response
-            user_response = self.wait_for_response(old_incoming)
+            user_response = self.wait_for_response(old_incoming,timeout)
             # Parse and formulate my response
             my_response = parser(user_response)
             # If parser returns exit, end the loop
@@ -122,11 +122,11 @@ def z_parser(response:str):
     my_response = ""
     match response.lower():
         case "who is this?" | "who are you?":
-            my_response = "You're talking to Maaz Ahmed's chat bot"
-        case "hi":
+            my_response = "You're talking to Maaz Ahmed's chat bot."
+        case "hi" | "hello":
             my_response = random.choice(["Yo!","Hello hello!","Namaste!"])
         case "bye":
             my_response = "exit"
         case _:
-            my_response = "Sorry, my creator didn't program me to respond to that"
+            my_response = "Sorry, my creator didn't program me to respond to that. I'm still 0 years old, so please be patient with me."
     return my_response
