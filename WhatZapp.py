@@ -80,7 +80,7 @@ class Zapper():
         incoming = self.driver.find_elements(By.CLASS_NAME,'_2wUmf.message-in.focusable-list-item')
         return incoming
 
-    def wait_for_response(self,old_incoming:list,freq=3,timeout=180):
+    def wait_for_response(self,old_incoming:list,timeout:int,freq=3):
         for _ in range(0,timeout,freq):
             new_incoming = self.get_incoming()
             if new_incoming[-1].id != old_incoming[-1].id:
@@ -88,10 +88,10 @@ class Zapper():
             time.sleep(freq)
         raise ResponseWaitTimeout
 
-    def deploy_bot(self, target:str, prompt:str, parser):
+    def deploy_bot(self, target:str, prompt:str, parser, response_timeout:int=300, check_freqency:int=3):
         self.load_target(target)
         # Wait and get the message text box
-        text_box = self.wait_for_element(self._textbox_path,timeout=60)
+        text_box = self.wait_for_element(self._textbox_path,60)
         # Send initial prompt message to target
         self.send(prompt,text_box)
         # Get current incoming messages
@@ -99,7 +99,7 @@ class Zapper():
 
         while True:
             # Wait and get new response
-            user_response = self.wait_for_response(old_incoming)
+            user_response = self.wait_for_response(old_incoming,response_timeout,check_freqency)
             # Parse and formulate my response
             my_response = parser(user_response)
             # If parser returns exit, end the loop
