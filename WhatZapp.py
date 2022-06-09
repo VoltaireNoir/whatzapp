@@ -126,10 +126,10 @@ def z_parser(response:str):
     match response.lower():
         case "who is this?" | "who are you?":
             my_response = "You're talking to Maaz Ahmed's chat bot"
-        case "hi":
+        case "hi"|"hey"|"hello":
             my_response = random.choice(["Yo!","Hello hello!","Namaste!"])
         case "bye":
             my_response = "exit"
         case _:
-            my_response = "Sorry, my creator didn't program me to respond to that"
+            my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
