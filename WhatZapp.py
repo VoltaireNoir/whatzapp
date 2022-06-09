@@ -40,6 +40,9 @@ class Zapper():
         self.driver.delete_all_cookies()
         self.driver.quit()
 
+    def load_target(self,target:str):
+        self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+
     def send(self,message,text_box,count=1):
         """
         Sends given string to the given text_box and sends the message.
@@ -68,7 +71,7 @@ class Zapper():
         return element
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
-        self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+        self.load_target(target)
         text_box = self.wait_return_element(self._textbox_path,timeout)
         self.send(message,text_box,count)
         time.sleep(1)
@@ -86,7 +89,7 @@ class Zapper():
         raise ResponseWaitTimeout
 
     def deploy_bot(self, target:str, prompt:str, parser):
-        self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+        self.load_target(target)
         # Wait and get the message text box
         text_box = self.wait_return_element(self._textbox_path,timeout=60)
         # Send initial prompt message to target
