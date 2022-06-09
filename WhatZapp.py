@@ -60,7 +60,7 @@ class Zapper():
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
 
-    def wait_return_element(self,xpath:str,timeout:int):
+    def wait_for_element(self,xpath:str,timeout:int):
         """
         Waits until the web eliment becomes visible on page, then finds the element and returns it.
         The element is identified using it's xpath.
@@ -72,7 +72,7 @@ class Zapper():
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
         self.load_target(target)
-        text_box = self.wait_return_element(self._textbox_path,timeout)
+        text_box = self.wait_for_element(self._textbox_path,timeout)
         self.send(message,text_box,count)
         time.sleep(1)
 
@@ -91,7 +91,7 @@ class Zapper():
     def deploy_bot(self, target:str, prompt:str, parser):
         self.load_target(target)
         # Wait and get the message text box
-        text_box = self.wait_return_element(self._textbox_path,timeout=60)
+        text_box = self.wait_for_element(self._textbox_path,timeout=60)
         # Send initial prompt message to target
         self.send(prompt,text_box)
         # Get current incoming messages
