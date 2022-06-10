@@ -118,6 +118,8 @@ class Zapper():
         self.quit()
         shutil.rmtree(self.session_path)
 
+# Custom exceptions
+
 class ResponseWaitTimeout(Exception):
     pass
 
@@ -129,7 +131,7 @@ def z_parser(response:str,*_):
         case "who is this?" | "who are you?":
             my_response = "You're talking to Maaz Ahmed's chat bot"
         case "hi"|"hey"|"hello":
-            my_response = random.choice(["Yo!","Hello hello!","Namaste!"])
+            my_response = random.choice(["Hola!","Hello hello!","Namaste!"])
         case "bye":
             my_response = "exit"
         case _:
