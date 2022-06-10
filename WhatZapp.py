@@ -11,10 +11,12 @@ from selenium.webdriver import ActionChains
 
 class Zapper():
 
-    _textbox_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]'
-    _attach_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div'
-    _media_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input'
-    _media_text_path = '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]'
+    path = {
+        "text" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]',
+        "attach" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div',
+        "media" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input',
+        "caption" : '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]',
+        }
 
     def __init__(self,persistence=False,login=True,headless=False):
         import os
@@ -65,7 +67,7 @@ class Zapper():
 
     def wait_for_element(self,xpath:str,timeout:int):
         """
-        Waits until the web eliment becomes visible on page, then finds the element and returns it.
+        Waits until the web eliment becomes accissible on page, then finds the element and returns it.
         The element is identified using it's xpath.
         """
         element = WebDriverWait(self.driver,timeout=timeout).until(lambda x: x.find_element(By.XPATH,xpath))
@@ -73,7 +75,7 @@ class Zapper():
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
         self.load_target(target)
-        text_box = self.wait_for_element(self._textbox_path,timeout)
+        text_box = self.wait_for_element(self.path["text"],timeout)
         self.send(message,text_box,count)
         time.sleep(1)
 
@@ -82,9 +84,9 @@ class Zapper():
         Sends media along with a caption to the current contact or to the target (if provided).
         """
         if target: self.load_target(target)
-        self.wait_for_element(self._attach_path,timeout).click()
-        self.wait_for_element(self._media_path,timeout).send_keys(file_path)
-        text_box = self.wait_for_element(self._media_text_path,timeout)
+        self.wait_for_element(self.path["attach"],timeout).click()
+        self.wait_for_element(self.path["media"],timeout).send_keys(file_path)
+        text_box = self.wait_for_element(self.path["caption"],timeout)
         self.send(caption,text_box)
 
     def get_incoming(self):
@@ -99,10 +101,16 @@ class Zapper():
             time.sleep(freq)
         raise ResponseWaitTimeout
 
-    def deploy_bot(self, target:str, prompt:str, parser, parser_args=(), response_timeout:int=300, check_freqency:int=3):
+    def deploy_bot(self,
+                   target:str,
+                   prompt:str,
+                   parser, parser_args=(),
+                   response_timeout:int=300,
+                   check_freqency:int=3):
+
         self.load_target(target)
         # Wait and get the message text box
-        text_box = self.wait_for_element(self._textbox_path,60)
+        text_box = self.wait_for_element(self.path["text"],60)
         # Send initial prompt message to target
         self.send(prompt,text_box)
         # Get current incoming messages
