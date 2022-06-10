@@ -74,7 +74,7 @@ class Zapper():
         return element
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
-        self.load_target(target)
+        if target: self.load_target(target)
         text_box = self.wait_for_element(self.path["text"],timeout)
         self.send(message,text_box,count)
         time.sleep(1)
