@@ -12,6 +12,9 @@ from selenium.webdriver import ActionChains
 class Zapper():
 
     _textbox_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]'
+    _attach_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div'
+    _media_path = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input'
+    _media_text_path = '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]'
 
     def __init__(self,persistence=False,login=True,headless=False):
         import os
@@ -65,9 +68,7 @@ class Zapper():
         Waits until the web eliment becomes visible on page, then finds the element and returns it.
         The element is identified using it's xpath.
         """
-        wait = WebDriverWait(self.driver,timeout=timeout).until(EC.visibility_of_element_located((By.XPATH,xpath)))
-        time.sleep(0.5)
-        element = self.driver.find_element(By.XPATH,xpath)
+        element = WebDriverWait(self.driver,timeout=timeout).until(lambda x: x.find_element(By.XPATH,xpath))
         return element
 
     def send_message(self,target:str,message:str,count=1,timeout=60):
@@ -75,6 +76,16 @@ class Zapper():
         text_box = self.wait_for_element(self._textbox_path,timeout)
         self.send(message,text_box,count)
         time.sleep(1)
+
+    def send_media(self,target:str,file_path:str,caption:str,timeout=60):
+        """
+        Sends media along with a caption to the current contact or to the target (if provided).
+        """
+        if target: self.load_target(target)
+        self.wait_for_element(self._attach_path,timeout).click()
+        self.wait_for_element(self._media_path,timeout).send_keys(file_path)
+        text_box = self.wait_for_element(self._media_text_path,timeout)
+        self.send(caption,text_box)
 
     def get_incoming(self):
         incoming = self.driver.find_elements(By.CLASS_NAME,'_2wUmf.message-in.focusable-list-item')
