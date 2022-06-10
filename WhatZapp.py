@@ -88,7 +88,7 @@ class Zapper():
             time.sleep(freq)
         raise ResponseWaitTimeout
 
-    def deploy_bot(self, target:str, prompt:str, parser, response_timeout:int=300, check_freqency:int=3):
+    def deploy_bot(self, target:str, prompt:str, parser, parser_args=(), response_timeout:int=300, check_freqency:int=3):
         self.load_target(target)
         # Wait and get the message text box
         text_box = self.wait_for_element(self._textbox_path,60)
@@ -101,7 +101,7 @@ class Zapper():
             # Wait and get new response
             user_response = self.wait_for_response(old_incoming,response_timeout,check_freqency)
             # Parse and formulate my response
-            my_response = parser(user_response)
+            my_response = parser(user_response,*parser_args)
             # If parser returns exit, end the loop
             if my_response == "exit":
                 self.send("Goodbye!",text_box)
@@ -121,7 +121,9 @@ class Zapper():
 class ResponseWaitTimeout(Exception):
     pass
 
-def z_parser(response:str):
+# Example Parsers
+
+def z_parser(response:str,*_):
     my_response = ""
     match response.lower():
         case "who is this?" | "who are you?":
@@ -133,3 +135,16 @@ def z_parser(response:str):
         case _:
             my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
+
+def z_gather(response:str,fields:dict,delimiter=":"):
+    if delimiter in response:
+        x = response.lower().strip().split(delimiter)
+        key = x[0]
+        response = x[1]
+        if key in fields:
+            fields[key] = response.strip()
+            return f"Your response for {key} has been recorded."
+    elif response.lower() == "stop":
+        return "exit"
+    else:
+        return f"Invalid reponse.\nPlease provide information as instructed, or send 'stop' to end this session."
