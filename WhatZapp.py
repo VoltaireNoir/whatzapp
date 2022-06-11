@@ -168,4 +168,4 @@ def z_gather(response:str,fields:dict,delimiter=":"):
     elif response.lower() == "stop":
         return "exit"
     else:
-        return f"Invalid reponse.\nPlease provide information as instructed, or send 'stop' to end this session."
+        return f"Invalid reponse. Please provide information as instructed, or send 'stop' to end this session.\nTry {list(fields)[0]}{delimiter} Your Response"
