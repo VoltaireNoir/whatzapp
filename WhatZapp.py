@@ -181,7 +181,7 @@ def z_parser(response: str, *_):
     """
     my_response = ""
     match response.lower():
-        case "who is this?" | "who are you?":
+        case "who is this" | "who is this?" | "who are you?" | "who are you":
             my_response = "You're talking to Maaz Ahmed's chat bot"
         case "hi" | "hey" | "hello":
             my_response = random.choice(["Hola!", "Hello hello!", "Namaste!"])
