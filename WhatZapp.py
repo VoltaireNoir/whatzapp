@@ -120,6 +120,7 @@ class Zapper:
         prompt: str,
         parser,
         parser_args=(),
+        exit_msg: str = "Goodbye!",
         response_timeout: int = 300,
         check_freqency: int = 3,
     ):
@@ -140,13 +141,19 @@ class Zapper:
             # Parse and formulate my response
             my_response = parser(user_response, *parser_args)
             # If parser returns exit, end the loop
-            if my_response == "exit":
-                self.send("Goodbye!", text_box)
-                break
-            # Send my response only if I have anything to say
-            else:
-                self.send(my_response, text_box)
-                old_incoming = self.get_incoming()
+            match my_response:
+                case "exit":
+                    self.send(exit_msg, text_box)
+                    break
+                case "exit", message:
+                    self.send(message, text_box)
+                    break
+                # Send my response only if I have anything to say
+                case _:
+                    self.send(my_response, text_box)
+                    old_incoming = self.get_incoming()
+
+        return True
 
     def clean_up(self):
         """
@@ -167,6 +174,11 @@ class ResponseWaitTimeout(Exception):
 
 
 def z_parser(response: str, *_):
+    """
+    A simple parser to be used with the bot (Zapper.deploy_bot())
+    This parser only responds to messages and nothing else.
+    The z_parser doesn't take additional arguments, so any arguments passed to parser_args parameter of deploy_bot method will be ignored.
+    """
     my_response = ""
     match response.lower():
         case "who is this?" | "who are you?":
@@ -181,13 +193,25 @@ def z_parser(response: str, *_):
 
 
 def z_gather(response: str, fields: dict, delimiter=":"):
+    """
+    A slighly advanced parser compared to the z_parser to be used with the bot (Zapper.deploy_bot()).
+    Note: The arguments should be passed to the deploy_bot method in the form of a list or tuple to 'parser_args' parameter.
+
+    Fields: A dictionary of string keys that you'd like to get the response to from the target.
+        Example: {"name":"","address":"","country":""}
+    Delimiter: The delimiter used to seperate keys from their supposed value entered by the target.
+        Example: If delimiter == ";", the target must be asked to send data in this form "key/field; their response"
+    """
     if delimiter in response:
         x = response.lower().strip().split(delimiter)
         key = x[0]
         response = x[1]
         if key in fields:
             fields[key] = response.strip()
-            return f"Your response for {key} has been recorded."
+            # Check if responses have been recorded for all provided fields
+            if len([val for val in fields.values() if val != "" or None]) == len(fields):
+                return "exit", "Responses for all fields have been recorded. Thank you!"
+            return f"Your response for '{key}' has been recorded."
     elif response.lower() == "stop":
         return "exit"
     else:
