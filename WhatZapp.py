@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import time, shutil, random, os
 from selenium import webdriver
-from selenium.common import exceptions as selexcept
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -38,11 +37,13 @@ class Zapper:
             self.login()
 
     def login(self):
+        """Takes you to WhatsApp login page and waits until login is complete"""
         self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element("_3yZPA",180,by="class name")
         return True
 
     def logout(self):
+        """Logs you out of WhatsApp if logged in, otherwise it raises a timeout exception."""
         if "web.whatsapp.com" not in self.driver.current_url:
             self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element(self.path["menu"],60).click()
@@ -50,10 +51,12 @@ class Zapper:
         self.wait_for_element(self.path["logout2"],60).click()
 
     def quit(self):
+        """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
         self.driver.delete_all_cookies()
         self.driver.quit()
 
     def load_target(self, target: str,force_load=False):
+        """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
         if force_load:
             self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Try to check if already on target page
@@ -64,7 +67,8 @@ class Zapper:
         # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
 
-    def is_target(self,incoming_sample, target: str):
+    def is_target(self,incoming_sample, target: str) -> bool:
+        """Uses the incoming messages as a sample to check whether they are from the given target number and returns True or False."""
         data_id = incoming_sample.get_attribute("data-id")
         if target in data_id:
             return True
@@ -103,6 +107,7 @@ class Zapper:
         return element
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
+        """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
         if target:
             self.load_target(target)
         text_box = self.wait_for_element(self.path["text"], timeout)
@@ -121,12 +126,14 @@ class Zapper:
         self.send(caption, text_box)
 
     def get_incoming(self):
+        """Gets all the available incoming messages on the chat page and returns them in a list."""
         incoming = self.driver.find_elements(
             By.CLASS_NAME, "_2wUmf.message-in.focusable-list-item"
         )
         return incoming
 
     def wait_for_response(self, old_incoming: list, timeout: int, freq=3):
+        """Uses a list of old_incoming messages for comparison and waits for a new message, and returns it."""
         for _ in range(0, timeout, freq):
             new_incoming = self.get_incoming()
             if old_incoming == []:
@@ -147,6 +154,12 @@ class Zapper:
         response_timeout: int = 300,
         check_freqency: int = 3,
     ):
+        """
+        Deploys a simple bot on the given target. It waits for target responses and uses the parser to respond accordingly.
+        This enters an infite while loop, which can only be broken when the parser returns "exit" string or when the timeout exception is raised.
+        The heart of the bot lies in the parser, which is a function passed as an argument. Use pre-defined parsers (z_parser,z_gather,z_custom) or define your own.
+        Read documentation to learn how to use a custom defined parser.
+        """
 
         self.load_target(target)
         # Wait and get the message text box
@@ -174,7 +187,6 @@ class Zapper:
                 case _:
                     self.send(my_response, text_box)
                     old_incoming = self.get_incoming()
-
         return True
 
     def clean_up(self):
