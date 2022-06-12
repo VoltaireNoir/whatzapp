@@ -204,10 +204,10 @@ def z_gather(response: str, fields: dict, delimiter=":"):
     """
     if delimiter in response:
         x = response.lower().strip().split(delimiter)
-        key = x[0]
-        response = x[1]
+        key = x[0].strip()
+        response = x[1].strip()
         if key in fields:
-            fields[key] = response.strip()
+            fields[key] = response
             # Check if responses have been recorded for all provided fields
             if len([val for val in fields.values() if val != "" or None]) == len(fields):
                 return "exit", "Responses for all fields have been recorded. Thank you!"
