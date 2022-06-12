@@ -212,10 +212,11 @@ def z_parser(response: str, *_):
             my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
 
-def z_custom(response: str, replies: dict):
+def z_custom(response: str, replies: dict, default_reply: str):
     """
     A very simple parser made to be used with the bot (Zapper.deploy_bot()).
     It takes a dictionary as an argument, which should contain strings of responses/conditions as keys, and their replies as values.
+    And a default_reply, which is a string used whenever the target reponds something that isn't within the scope of provided replies.
     Example: {"hi":"Hey, how are you doing?","Who is this?":"I am a bot","Bye":"exit"}
     Note: The dictionary should be passed wrapped in a list or tuple as an argument to parser_args parameter.
     """
@@ -223,7 +224,7 @@ def z_custom(response: str, replies: dict):
     if response in replies:
         return replies[response]
     else:
-        return "I'm sorry, I don't know how to respond to that."
+        return default_reply
 
 def z_gather(response: str, fields: dict, delimiter=":"):
     """
@@ -246,6 +247,6 @@ def z_gather(response: str, fields: dict, delimiter=":"):
                 return "exit", "Responses for all fields have been recorded. Thank you!"
             return f"Your response for '{key}' has been recorded."
     elif response == "stop":
-        return "exit"
+        return "exit", "Thank you for your time."
     else:
-        return f"Invalid reponse. Please provide information as instructed, or send 'stop' to end this session.\nTry {list(fields)[0]}{delimiter} Your Response"
+        return f"Invalid reponse.\nTry {list(fields)[0]}{delimiter} Your Response.\nOr send 'stop' to end this session."
