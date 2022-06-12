@@ -212,7 +212,7 @@ def z_gather(response: str, fields: dict, delimiter=":"):
             if len([val for val in fields.values() if val != "" or None]) == len(fields):
                 return "exit", "Responses for all fields have been recorded. Thank you!"
             return f"Your response for '{key}' has been recorded."
-    elif response.lower() == "stop":
+    elif response == "stop":
         return "exit"
     else:
         return f"Invalid reponse. Please provide information as instructed, or send 'stop' to end this session.\nTry {list(fields)[0]}{delimiter} Your Response"
