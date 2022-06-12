@@ -48,8 +48,23 @@ class Zapper:
         self.driver.delete_all_cookies()
         self.driver.quit()
 
-    def load_target(self, target: str):
+    def load_target(self, target: str,force_load=False):
+        if force_load:
+            self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+        # Try to check if already on target page
+        incoming = self.get_incoming()
+        if incoming != []:
+           if self.is_target(incoming[0],target):
+               return
+        # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+
+    def is_target(self,incoming_sample, target: str):
+        data_id = incoming_sample.get_attribute("data-id")
+        if target in data_id:
+            return True
+        else:
+            return False
 
     def send(self, message, text_box, count=1):
         """
