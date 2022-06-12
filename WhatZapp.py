@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time, shutil, random
+import time, shutil, random, os
 from selenium import webdriver
 from selenium.common import exceptions as selexcept
 from selenium.webdriver.common.by import By
@@ -9,17 +9,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
 
 
-class Zapper():
+class Zapper:
 
     path = {
-        "text" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]',
-        "attach" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div',
-        "media" : '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input',
-        "caption" : '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]',
-        }
+        "text": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]',
+        "attach": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div',
+        "media": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input',
+        "caption": '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]',
+    }
 
-    def __init__(self,persistence=False,login=True,headless=False):
-        import os
+    def __init__(self, persistence=False, login=True, headless=False):
+
         self.session_path = os.path.join(os.getcwd(), "session")
         if persistence:
             options = webdriver.ChromeOptions()
@@ -31,12 +31,15 @@ class Zapper():
             self.driver = webdriver.Chrome()
             self.persistence = persistence
 
-        if login: self.login()
+        if login:
+            self.login()
 
     def login(self):
         self.driver.get("https://web.whatsapp.com/")
         try:
-            wait = WebDriverWait(self.driver,timeout=150).until(EC.visibility_of_element_located((By.CLASS_NAME,"_3yZPA")))
+            wait = WebDriverWait(self.driver, timeout=150).until(
+                EC.visibility_of_element_located((By.CLASS_NAME, "_3yZPA"))
+            )
         except selexcept.TimeoutException:
             print("Error: Timeout occurred during login.")
             self.quit()
@@ -45,10 +48,10 @@ class Zapper():
         self.driver.delete_all_cookies()
         self.driver.quit()
 
-    def load_target(self,target:str):
+    def load_target(self, target: str):
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
 
-    def send(self,message,text_box,count=1):
+    def send(self, message, text_box, count=1):
         """
         Sends given string to the given text_box and sends the message.
         Note: To send a paragraph, use newline characters to seperate lines.
@@ -57,77 +60,92 @@ class Zapper():
             if "\n" in message:
                 for frag in message.split("\n"):
                     text_box.send_keys(frag)
-                    ActionChains(self.driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
-                    ActionChains(self.driver).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
+                    ActionChains(self.driver).key_down(Keys.SHIFT).key_down(
+                        Keys.ENTER
+                    ).perform()
+                    ActionChains(self.driver).key_up(Keys.SHIFT).key_up(
+                        Keys.ENTER
+                    ).perform()
                 text_box.send_keys("\n")
                 text_box.send_keys("\n")
             else:
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
 
-    def wait_for_element(self,xpath:str,timeout:int):
+    def wait_for_element(self, xpath: str, timeout: int):
         """
         Waits until the web eliment becomes accissible on page, then finds the element and returns it.
         The element is identified using it's xpath.
         """
-        element = WebDriverWait(self.driver,timeout=timeout).until(lambda x: x.find_element(By.XPATH,xpath))
+        element = WebDriverWait(self.driver, timeout=timeout).until(
+            lambda x: x.find_element(By.XPATH, xpath)
+        )
         return element
 
-    def send_message(self,target:str,message:str,count=1,timeout=60):
-        if target: self.load_target(target)
-        text_box = self.wait_for_element(self.path["text"],timeout)
-        self.send(message,text_box,count)
+    def send_message(self, target: str, message: str, count=1, timeout=60):
+        if target:
+            self.load_target(target)
+        text_box = self.wait_for_element(self.path["text"], timeout)
+        self.send(message, text_box, count)
         time.sleep(1)
 
-    def send_media(self,target:str,file_path:str,caption:str,timeout=60):
+    def send_media(self, target: str, file_path: str, caption: str, timeout=60):
         """
         Sends media along with a caption to the current contact or to the target (if provided).
         """
-        if target: self.load_target(target)
-        self.wait_for_element(self.path["attach"],timeout).click()
-        self.wait_for_element(self.path["media"],timeout).send_keys(file_path)
-        text_box = self.wait_for_element(self.path["caption"],timeout)
-        self.send(caption,text_box)
+        if target:
+            self.load_target(target)
+        self.wait_for_element(self.path["attach"], timeout).click()
+        self.wait_for_element(self.path["media"], timeout).send_keys(file_path)
+        text_box = self.wait_for_element(self.path["caption"], timeout)
+        self.send(caption, text_box)
 
     def get_incoming(self):
-        incoming = self.driver.find_elements(By.CLASS_NAME,'_2wUmf.message-in.focusable-list-item')
+        incoming = self.driver.find_elements(
+            By.CLASS_NAME, "_2wUmf.message-in.focusable-list-item"
+        )
         return incoming
 
-    def wait_for_response(self,old_incoming:list,timeout:int,freq=3):
-        for _ in range(0,timeout,freq):
+    def wait_for_response(self, old_incoming: list, timeout: int, freq=3):
+        for _ in range(0, timeout, freq):
             new_incoming = self.get_incoming()
             if new_incoming[-1].id != old_incoming[-1].id:
                 return new_incoming[-1].text.split("\n")[0]
             time.sleep(freq)
         raise ResponseWaitTimeout
 
-    def deploy_bot(self,
-                   target:str,
-                   prompt:str,
-                   parser, parser_args=(),
-                   response_timeout:int=300,
-                   check_freqency:int=3):
+    def deploy_bot(
+        self,
+        target: str,
+        prompt: str,
+        parser,
+        parser_args=(),
+        response_timeout: int = 300,
+        check_freqency: int = 3,
+    ):
 
         self.load_target(target)
         # Wait and get the message text box
-        text_box = self.wait_for_element(self.path["text"],60)
+        text_box = self.wait_for_element(self.path["text"], 60)
         # Send initial prompt message to target
-        self.send(prompt,text_box)
+        self.send(prompt, text_box)
         # Get current incoming messages
         old_incoming = self.get_incoming()
 
         while True:
             # Wait and get new response
-            user_response = self.wait_for_response(old_incoming,response_timeout,check_freqency)
+            user_response = self.wait_for_response(
+                old_incoming, response_timeout, check_freqency
+            )
             # Parse and formulate my response
-            my_response = parser(user_response,*parser_args)
+            my_response = parser(user_response, *parser_args)
             # If parser returns exit, end the loop
             if my_response == "exit":
-                self.send("Goodbye!",text_box)
+                self.send("Goodbye!", text_box)
                 break
             # Send my response only if I have anything to say
             else:
-                self.send(my_response,text_box)
+                self.send(my_response, text_box)
                 old_incoming = self.get_incoming()
 
     def clean_up(self):
@@ -137,27 +155,32 @@ class Zapper():
         self.quit()
         shutil.rmtree(self.session_path)
 
+
 # Custom exceptions
+
 
 class ResponseWaitTimeout(Exception):
     pass
 
+
 # Example Parsers
 
-def z_parser(response:str,*_):
+
+def z_parser(response: str, *_):
     my_response = ""
     match response.lower():
         case "who is this?" | "who are you?":
             my_response = "You're talking to Maaz Ahmed's chat bot"
-        case "hi"|"hey"|"hello":
-            my_response = random.choice(["Hola!","Hello hello!","Namaste!"])
+        case "hi" | "hey" | "hello":
+            my_response = random.choice(["Hola!", "Hello hello!", "Namaste!"])
         case "bye":
             my_response = "exit"
         case _:
             my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
 
-def z_gather(response:str,fields:dict,delimiter=":"):
+
+def z_gather(response: str, fields: dict, delimiter=":"):
     if delimiter in response:
         x = response.lower().strip().split(delimiter)
         key = x[0]
