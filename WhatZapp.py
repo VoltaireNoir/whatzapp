@@ -16,6 +16,9 @@ class Zapper:
         "attach": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div',
         "media": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/span/div/div/ul/li[1]/button/input',
         "caption": '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]',
+        "menu": '//*[@id="side"]/header/div[2]/div/span/div[3]/div/span',
+        "logout1": '//*[@id="side"]/header/div[2]/div/span/div[3]/span/div/ul/li[4]/div[1]',
+        "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]'
     }
 
     def __init__(self, persistence=False, login=True, headless=False):
@@ -43,6 +46,13 @@ class Zapper:
         except selexcept.TimeoutException:
             print("Error: Timeout occurred during login.")
             self.quit()
+
+    def logout(self):
+        if "web.whatsapp.com" not in self.driver.current_url:
+            self.driver.get("https://web.whatsapp.com/")
+        self.wait_for_element(self.path["menu"],60).click()
+        self.wait_for_element(self.path["logout1"],60).click()
+        self.wait_for_element(self.path["logout2"],60).click()
 
     def quit(self):
         self.driver.delete_all_cookies()
