@@ -39,13 +39,8 @@ class Zapper:
 
     def login(self):
         self.driver.get("https://web.whatsapp.com/")
-        try:
-            wait = WebDriverWait(self.driver, timeout=150).until(
-                EC.visibility_of_element_located((By.CLASS_NAME, "_3yZPA"))
-            )
-        except selexcept.TimeoutException:
-            print("Error: Timeout occurred during login.")
-            self.quit()
+        self.wait_for_element("_3yZPA",180,by="class name")
+        return True
 
     def logout(self):
         if "web.whatsapp.com" not in self.driver.current_url:
@@ -97,13 +92,13 @@ class Zapper:
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
 
-    def wait_for_element(self, xpath: str, timeout: int):
+    def wait_for_element(self, loc: str, timeout: int, by='xpath'):
         """
         Waits until the web eliment becomes accissible on page, then finds the element and returns it.
-        The element is identified using it's xpath.
+        The element is identified using it's xpath by default, unless class_name is specified.
         """
         element = WebDriverWait(self.driver, timeout=timeout).until(
-            lambda x: x.find_element(By.XPATH, xpath)
+            lambda x: x.find_element(by, loc)
         )
         return element
 
