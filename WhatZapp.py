@@ -129,7 +129,10 @@ class Zapper:
     def wait_for_response(self, old_incoming: list, timeout: int, freq=3):
         for _ in range(0, timeout, freq):
             new_incoming = self.get_incoming()
-            if new_incoming[-1].id != old_incoming[-1].id:
+            if old_incoming == []:
+                if len(new_incoming) > len(old_incoming):
+                    return new_incoming[-1].text.split("\n")[0]
+            elif new_incoming[-1].id != old_incoming[-1].id:
                 return new_incoming[-1].text.split("\n")[0]
             time.sleep(freq)
         raise ResponseWaitTimeout
@@ -152,7 +155,6 @@ class Zapper:
         self.send(prompt, text_box)
         # Get current incoming messages
         old_incoming = self.get_incoming()
-
         while True:
             # Wait and get new response
             user_response = self.wait_for_response(
