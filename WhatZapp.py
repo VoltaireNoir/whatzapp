@@ -187,11 +187,10 @@ class ResponseWaitTimeout(Exception):
 
 # Example Parsers
 
-
 def z_parser(response: str, *_):
     """
     A simple parser to be used with the bot (Zapper.deploy_bot())
-    This parser only responds to messages and nothing else.
+    This parser only responds to messages using hardcoded replies and nothing else.
     The z_parser doesn't take additional arguments, so any arguments passed to parser_args parameter of deploy_bot method will be ignored.
     """
     my_response = ""
@@ -206,11 +205,23 @@ def z_parser(response: str, *_):
             my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
 
+def z_custom(response: str, replies: dict):
+    """
+    A very simple parser made to be used with the bot (Zapper.deploy_bot()).
+    It takes a dictionary as an argument, which should contain strings of responses/conditions as keys, and their replies as values.
+    Example: {"hi":"Hey, how are you doing?","Who is this?":"I am a bot","Bye":"exit"}
+    Note: The dictionary should be passed wrapped in a list or tuple as an argument to parser_args parameter.
+    """
+    response = response.strip().lower()
+    if response in replies:
+        return replies[response]
+    else:
+        return "I'm sorry, I don't know how to respond to that."
 
 def z_gather(response: str, fields: dict, delimiter=":"):
     """
     A slighly advanced parser compared to the z_parser to be used with the bot (Zapper.deploy_bot()).
-    Note: The arguments should be passed to the deploy_bot method in the form of a list or tuple to 'parser_args' parameter.
+    Note: The arguments should be passed to the deploy_bot method wrapped in a list or tuple to 'parser_args' parameter.
 
     Fields: A dictionary of string keys that you'd like to get the response to from the target.
         Example: {"name":"","address":"","country":""}
