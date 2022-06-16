@@ -21,12 +21,13 @@ class Zapper:
         "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]'
     }
 
-    def __init__(self, autostart=True, persistence=False, login=True, headless=False):
+    def __init__(self, autostart=True, persistence=False, login=True, headless=False, logs=False):
 
         self.session_path = os.path.join(os.getcwd(), "session")
         self.persistence = persistence
         self.headless = headless
         self.login_enabled = login
+        self.logs = logs
 
         if autostart: self.start(persistence,login,headless)
 
@@ -289,4 +290,8 @@ def z_cat_facts(response:str):
 # Logger
 
 def logger(message:str):
-   print(f"LOG ({time.strftime('%b %d %r')}): {message}")
+   logmessage = f"LOG ({time.strftime('%b %d %r')}): {message}"
+   print(logmessage)
+   logfile = os.path.join(os.getcwd(),"z_log")
+   with open(logfile,'a') as f:
+       f.write(logmessage+"\n")
