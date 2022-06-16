@@ -21,23 +21,31 @@ class Zapper:
         "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]'
     }
 
-    def __init__(self, persistence=False, login=True, headless=False):
+    def __init__(self, autostart=True, persistence=False, login=True, headless=False):
 
         self.session_path = os.path.join(os.getcwd(), "session")
         self.persistence = persistence
         self.headless = headless
-        if persistence:
+        self.login_enabled = login
+
+        if autostart: self.start(persistence,login,headless)
+
+    def start(self,persistence=None, login=None, headless=None):
+        if persistence is not None: self.persistence = persistence
+        if login is not None: self.login_enabled = login
+        if headless is not None: self.headless = headless
+
+        if self.persistence:
             options = webdriver.ChromeOptions()
             options.add_argument(f"--user-data-dir={self.session_path}")
-            if headless: options.add_argument("--headless")
+            if self.headless: options.add_argument("--headless")
             self.driver = webdriver.Chrome(options=options)
-            if headless:
+            if self.headless:
                 self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
         else:
             self.driver = webdriver.Chrome()
-            self.persistence = persistence
 
-        if login:
+        if self.login_enabled:
             self.login()
 
     def login(self):
@@ -54,7 +62,7 @@ class Zapper:
         self.wait_for_element(self.path["logout1"],60).click()
         self.wait_for_element(self.path["logout2"],60).click()
 
-    def quit(self):
+    def stop(self):
         """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
         self.driver.delete_all_cookies()
         self.driver.quit()
