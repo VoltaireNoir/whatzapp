@@ -30,6 +30,7 @@ class Zapper:
         self.logs = logs
 
         if autostart: self.start(persistence,login,headless)
+        if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
 
     def start(self,persistence=None, login=None, headless=None):
         if persistence is not None: self.persistence = persistence
@@ -46,6 +47,8 @@ class Zapper:
         else:
             self.driver = webdriver.Chrome()
 
+        if self.logs: logger("Session started")
+
         if self.login_enabled:
             self.login()
 
@@ -53,6 +56,7 @@ class Zapper:
         """Takes you to WhatsApp login page and waits until login is complete"""
         self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element("_3yZPA",180,by="class name")
+        if self.logs: logger("WhatsApp login successful")
         return True
 
     def logout(self):
@@ -67,6 +71,7 @@ class Zapper:
         """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
         self.driver.delete_all_cookies()
         self.driver.quit()
+        if self.logs: logger("Session stopped")
 
     def load_target(self, target: str,force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
@@ -79,6 +84,8 @@ class Zapper:
                return
         # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
+
+        if self.logs: logger(f"Loading target:{target}")
 
     def is_target(self,incoming_sample, target: str) -> bool:
         """Uses the incoming messages as a sample to check whether they are from the given target number and returns True or False."""
@@ -108,6 +115,7 @@ class Zapper:
             else:
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
+        if self.logs: logger(f"Message sent: {message}")
 
     def wait_for_element(self, loc: str, timeout: int, by='xpath'):
         """
@@ -124,6 +132,7 @@ class Zapper:
         if target:
             self.load_target(target)
         text_box = self.wait_for_element(self.path["text"], timeout)
+        if self.logs: logger(f"Sending message to target: {target}")
         self.send(message, text_box, count)
         time.sleep(1)
 
@@ -137,6 +146,7 @@ class Zapper:
         self.wait_for_element(self.path["media"], timeout).send_keys(file_path)
         text_box = self.wait_for_element(self.path["caption"], timeout)
         self.send(caption, text_box)
+        if self.logs: logger(f"Media file ({file_path}) sent to {target}")
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
@@ -177,6 +187,9 @@ class Zapper:
         self.load_target(target)
         # Wait and get the message text box
         text_box = self.wait_for_element(self.path["text"], 60)
+
+        if self.logs: logger(f"Deploying bot on target: {target}")
+
         # Send initial prompt message to target
         self.send(prompt, text_box)
         # Get current incoming messages
@@ -186,6 +199,7 @@ class Zapper:
             user_response = self.wait_for_response(
                 old_incoming, response_timeout, check_freqency
             )
+            if self.logs: logger(f"Received: {user_response}")
             # Parse and formulate my response
             my_response = parser(user_response, *parser_args)
             # If parser returns exit, end the loop
@@ -208,6 +222,7 @@ class Zapper:
         """
         self.stop()
         shutil.rmtree(self.session_path)
+        if self.logs: logger("Cleanup complete")
 
 
 # Custom exceptions
