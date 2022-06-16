@@ -10,6 +10,7 @@ from selenium.webdriver import ActionChains
 
 class Zapper:
 
+    user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
     path = {
         "text": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[2]',
         "attach": '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[1]/div[2]/div/div',
@@ -23,12 +24,15 @@ class Zapper:
     def __init__(self, persistence=False, login=True, headless=False):
 
         self.session_path = os.path.join(os.getcwd(), "session")
+        self.persistence = persistence
+        self.headless = headless
         if persistence:
             options = webdriver.ChromeOptions()
             options.add_argument(f"--user-data-dir={self.session_path}")
-            options.headless = headless
+            if headless: options.add_argument("--headless")
             self.driver = webdriver.Chrome(options=options)
-            self.persistence = persistence
+            if headless:
+                self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
         else:
             self.driver = webdriver.Chrome()
             self.persistence = persistence
