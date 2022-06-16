@@ -249,7 +249,7 @@ def z_gather(response: str, fields: dict, delimiter=":"):
         Example: If delimiter == ";", the target must be asked to send data in this form "key/field; their response"
     """
     if delimiter in response:
-        x = response.lower().strip().split(delimiter)
+        x = response.strip().lower().split(delimiter)
         key = x[0].strip()
         response = x[1].strip()
         if key in fields:
@@ -262,3 +262,14 @@ def z_gather(response: str, fields: dict, delimiter=":"):
         return "exit", "Thank you for your time."
     else:
         return f"Invalid reponse.\nTry {list(fields)[0]}{delimiter} Your Response.\nOr send 'stop' to end this session."
+
+def z_cat_facts(response:str):
+    import requests
+    response = response.strip().lower()
+    if response in ("cat","fact","cat fact"):
+        fact = requests.api.get("https://catfact.ninja/fact").json()
+        return f"Here's a cat fact for you:\n{fact['fact']}"
+    elif response == "stop":
+        return "exit", "Time for a catnap... Zzzz..."
+    else:
+        return "You have been chosen to receive cat facts.\nSend 'cat' or 'fact' or 'cat fact' to receive wisdom.\nSend 'stop' to go back to being miserable again."
