@@ -205,7 +205,7 @@ class Zapper:
         """
         Cleans up session files created during a persistent run in the working directory.
         """
-        self.quit()
+        self.stop()
         shutil.rmtree(self.session_path)
 
 
