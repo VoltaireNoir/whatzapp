@@ -285,3 +285,8 @@ def z_cat_facts(response:str):
         return "exit", "Time for a catnap... Zzzz..."
     else:
         return "You have been chosen to receive cat facts.\nSend 'cat' or 'fact' or 'cat fact' to receive wisdom.\nSend 'stop' to go back to being miserable again."
+
+# Logger
+
+def logger(message:str):
+   print(f"LOG ({time.strftime('%b %d %r')}): {message}")
