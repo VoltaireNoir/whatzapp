@@ -189,8 +189,8 @@ class Zapper:
     ):
         """
         Deploys a simple bot on the given target. It waits for target responses and uses the parser to respond accordingly.
-        This enters an infite while loop, which can only be broken when the parser returns "exit" string or when the timeout exception is raised.
         The heart of the bot lies in the parser, which is a function passed as an argument. Use pre-defined parsers (z_parser,z_gather,z_custom) or define your own.
+        This enters an infite while loop, which can only be broken when the parser returns "exit" string or when the response timeout exception is raised.
         Read documentation to learn how to use a custom defined parser.
         """
 
