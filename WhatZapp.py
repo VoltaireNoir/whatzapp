@@ -28,6 +28,7 @@ class Zapper:
         self.headless = headless
         self.login_enabled = login
         self.logs = logs
+        self.driver = None
 
         if autostart: self.start(persistence,login,headless)
         if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
@@ -54,6 +55,7 @@ class Zapper:
 
     def login(self):
         """Takes you to WhatsApp login page and waits until login is complete"""
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element("_3yZPA",180,by="class name")
         if self.logs: logger("WhatsApp login successful")
@@ -61,6 +63,7 @@ class Zapper:
 
     def logout(self):
         """Logs you out of WhatsApp if logged in, otherwise it raises a timeout exception."""
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         if "web.whatsapp.com" not in self.driver.current_url:
             self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element(self.path["menu"],60).click()
@@ -69,12 +72,15 @@ class Zapper:
 
     def stop(self):
         """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
-        self.driver.delete_all_cookies()
-        self.driver.quit()
-        if self.logs: logger("Session stopped")
+        if self.driver is not None:
+            self.driver.delete_all_cookies()
+            self.driver.quit()
+            self.driver = None
+            if self.logs: logger("Session stopped")
 
     def load_target(self, target: str,force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         if force_load:
             self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Try to check if already on target page
@@ -122,6 +128,7 @@ class Zapper:
         Waits until the web eliment becomes accissible on page, then finds the element and returns it.
         The element is identified using it's xpath by default, unless class_name is specified.
         """
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         element = WebDriverWait(self.driver, timeout=timeout).until(
             lambda x: x.find_element(by, loc)
         )
@@ -129,6 +136,7 @@ class Zapper:
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
         """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         if target:
             self.load_target(target)
         text_box = self.wait_for_element(self.path["text"], timeout)
@@ -140,6 +148,7 @@ class Zapper:
         """
         Sends media along with a caption to the current contact or to the target (if provided).
         """
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         if target:
             self.load_target(target)
         self.wait_for_element(self.path["attach"], timeout).click()
@@ -150,6 +159,7 @@ class Zapper:
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
         incoming = self.driver.find_elements(
             By.CLASS_NAME, "_2wUmf.message-in.focusable-list-item"
         )
@@ -183,6 +193,8 @@ class Zapper:
         The heart of the bot lies in the parser, which is a function passed as an argument. Use pre-defined parsers (z_parser,z_gather,z_custom) or define your own.
         Read documentation to learn how to use a custom defined parser.
         """
+
+        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
 
         self.load_target(target)
         # Wait and get the message text box
@@ -232,6 +244,8 @@ class Zapper:
 class ResponseWaitTimeout(Exception):
     pass
 
+class ZapperSessionNotStarted(Exception):
+    pass
 
 # Example Parsers
 
