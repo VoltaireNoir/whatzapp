@@ -85,7 +85,7 @@ class Zapper:
         # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
 
-        if self.logs: logger(f"Loading target:{target}")
+        if self.logs: logger(f"Loading target: {target}")
 
     def is_target(self,incoming_sample, target: str) -> bool:
         """Uses the incoming messages as a sample to check whether they are from the given target number and returns True or False."""
@@ -199,7 +199,7 @@ class Zapper:
             user_response = self.wait_for_response(
                 old_incoming, response_timeout, check_freqency
             )
-            if self.logs: logger(f"Received: {user_response}")
+            if self.logs: logger(f"Message received: {user_response}")
             # Parse and formulate my response
             my_response = parser(user_response, *parser_args)
             # If parser returns exit, end the loop
@@ -214,6 +214,7 @@ class Zapper:
                 case _:
                     self.send(my_response, text_box)
                     old_incoming = self.get_incoming()
+        if self.logs: logger("Bot session ended")
         return True
 
     def clean_up(self):
@@ -305,7 +306,7 @@ def z_cat_facts(response:str):
 # Logger
 
 def logger(message:str):
-   logmessage = f"LOG ({time.strftime('%b %d %r')}): {message}"
+   logmessage = f"LOG [{time.strftime('%b %d %r')}]: {message}"
    print(logmessage)
    logfile = os.path.join(os.getcwd(),"z_log")
    with open(logfile,'a') as f:
