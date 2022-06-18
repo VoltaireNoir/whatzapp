@@ -35,6 +35,7 @@ class Zapper:
         if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
 
     def start(self,persistence=None, login=None, headless=None):
+        if self.driver is not None: return
         if persistence is not None: self.persistence = persistence
         if login is not None: self.login_enabled = login
         if headless is not None: self.headless = headless
