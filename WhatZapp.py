@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import time, shutil, random, os
+import time, shutil, random, os, asyncio
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -45,17 +46,23 @@ class Zapper:
             self.driver = webdriver.Chrome(options=options)
             if self.headless:
                 self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
+            self.driver.delete_all_cookies()
         else:
             self.driver = webdriver.Chrome()
+            self.driver.delete_all_cookies()
 
         if self.logs: logger("Session started")
 
         if self.login_enabled:
             self.login()
 
+    def __webdriver_check(self):
+        if self.driver is None:
+            raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+
     def login(self):
         """Takes you to WhatsApp login page and waits until login is complete"""
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element("_3yZPA",180,by="class name")
         if self.logs: logger("WhatsApp login successful")
@@ -63,7 +70,7 @@ class Zapper:
 
     def logout(self):
         """Logs you out of WhatsApp if logged in, otherwise it raises a timeout exception."""
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         if "web.whatsapp.com" not in self.driver.current_url:
             self.driver.get("https://web.whatsapp.com/")
         self.wait_for_element(self.path["menu"],60).click()
@@ -80,7 +87,7 @@ class Zapper:
 
     def load_target(self, target: str,force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         if force_load:
             self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Try to check if already on target page
@@ -128,7 +135,7 @@ class Zapper:
         Waits until the web eliment becomes accissible on page, then finds the element and returns it.
         The element is identified using it's xpath by default, unless class_name is specified.
         """
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         element = WebDriverWait(self.driver, timeout=timeout).until(
             lambda x: x.find_element(by, loc)
         )
@@ -136,7 +143,7 @@ class Zapper:
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
         """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         if target:
             self.load_target(target)
         text_box = self.wait_for_element(self.path["text"], timeout)
@@ -144,11 +151,16 @@ class Zapper:
         self.send(message, text_box, count)
         time.sleep(1)
 
+    async def send_message_later(self,target:str,message:str,time: datetime):
+        delay = time - datetime.now()
+        await asyncio.sleep(delay.seconds)
+        self.send_message(target,message)
+
     def send_media(self, target: str, file_path: str, caption: str, timeout=60):
         """
         Sends media along with a caption to the current contact or to the target (if provided).
         """
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         if target:
             self.load_target(target)
         self.wait_for_element(self.path["attach"], timeout).click()
@@ -157,9 +169,16 @@ class Zapper:
         self.send(caption, text_box)
         if self.logs: logger(f"Media file ({file_path}) sent to {target}")
 
+    def schedular(self, data: list):
+        self.__webdriver_check()
+        tasks = []
+        for target, message, time in data:
+            tasks.append(self.send_message_later(target,message,time))
+        asyncio.run(asyncio.wait(tasks))
+
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
         incoming = self.driver.find_elements(
             By.CLASS_NAME, "_2wUmf.message-in.focusable-list-item"
         )
@@ -194,7 +213,7 @@ class Zapper:
         Read documentation to learn how to use a custom defined parser.
         """
 
-        if self.driver is None: raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+        self.__webdriver_check()
 
         self.load_target(target)
         # Wait and get the message text box
