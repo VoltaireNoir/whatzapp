@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time, shutil, random, os, asyncio
+import time, shutil, random, os
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -152,11 +152,6 @@ class Zapper:
         self.send(message, text_box, count)
         time.sleep(1)
 
-    async def send_message_later(self,target:str,message:str,time: datetime):
-        delay = time - datetime.now()
-        await asyncio.sleep(delay.seconds)
-        self.send_message(target,message)
-
     def send_media(self, target: str, file_path: str, caption: str, timeout=60):
         """
         Sends media along with a caption to the current contact or to the target (if provided).
@@ -170,12 +165,26 @@ class Zapper:
         self.send(caption, text_box)
         if self.logs: logger(f"Media file ({file_path}) sent to {target}")
 
-    def schedular(self, data: list):
+    def message_schedular(self, data:list):
         self.__webdriver_check()
-        tasks = []
-        for target, message, time in data:
-            tasks.append(self.send_message_later(target,message,time))
-        asyncio.run(asyncio.wait(tasks))
+        schedule = sorted(data, key=lambda x: x[2])
+        if self.logs: logger(f"Message schedular started with {len(schedule)} jobs")
+        err = 0
+        for i, event in enumerate(schedule):
+            target, message, schtime = event
+            diff = schtime - datetime.now()
+            try:
+                if diff.days >= 0:
+                    time.sleep(diff.seconds)
+                    self.send_message(target,message)
+                else:
+                    self.send_message(target,message)
+                if self.logs: logger(f"Job no.{i+1} complete for target: {target}")
+            except Exception as e:
+                err += 1
+                if self.logs: logger(f"Job no. {i+1} for target {target} failed.\n  Error occured: {e}")
+                continue
+        if self.logs: logger(f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors")
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
@@ -345,3 +354,8 @@ def logger(message:str):
    logfile = os.path.join(os.getcwd(),"z_log")
    with open(logfile,'a') as f:
        f.write(logmessage+"\n")
+
+if __name__ == "__main__":
+    data = [("3rd","aa",datetime(2022,6,19,14,25)),("2nd","aa",datetime(2022,6,19,12,25)),("1st","aa",datetime(2022,6,15,12,25)),("4th","aa",datetime(2022,6,20,12,25))]
+    x = Zapper(autostart=False)
+    x.alt_schedular(data=data)
