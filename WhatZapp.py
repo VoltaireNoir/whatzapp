@@ -22,7 +22,7 @@ class Zapper:
         "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]'
     }
 
-    def __init__(self, autostart=True, persistence=False, login=True, headless=False, logs=False):
+    def __init__(self, persistence=False, login=True, headless=False, autostart=True, logs=False):
 
         self.session_path = os.path.join(os.getcwd(), "session")
         self.persistence = persistence
