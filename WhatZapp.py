@@ -384,8 +384,7 @@ def z_cat_facts(response:str):
 def logger(message:str):
    logmessage = f"LOG [{datetime.now().strftime('%b %d %T')}]: {message}"
    print(logmessage)
-   logfile = os.path.join(os.getcwd(),"z_log")
-   with open(logfile,'a') as f:
+   with open("z_log",'a') as f:
        f.write(logmessage+"\n")
 
 if __name__ == "__main__":
