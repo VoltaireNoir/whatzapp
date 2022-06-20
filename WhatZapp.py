@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time, shutil, random, os
+import time, shutil, os
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -309,6 +309,7 @@ def z_parser(response: str, *_):
     This parser only responds to messages using hardcoded replies and nothing else.
     The z_parser doesn't take additional arguments, so any arguments passed to parser_args parameter of deploy_bot method will be ignored.
     """
+    import random
     my_response = ""
     match response.lower():
         case "who is this" | "who is this?" | "who are you?" | "who are you":
