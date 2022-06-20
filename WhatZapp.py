@@ -138,9 +138,14 @@ class Zapper:
         The element is identified using it's xpath by default, unless class_name is specified.
         """
         self.__webdriver_check()
-        element = WebDriverWait(self.driver, timeout=timeout).until(
-            lambda x: x.find_element(by, loc)
-        )
+        try:
+            element = WebDriverWait(self.driver, timeout=timeout).until(
+                lambda x: x.find_element(by, loc)
+            )
+        except:
+            raise ElementWaitTimeout(
+                "Either the page didn't load or the element was not found on the page."
+            )
         return element
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
@@ -288,6 +293,9 @@ class Zapper:
 # Custom exceptions
 
 class ResponseWaitTimeout(Exception):
+    pass
+
+class ElementWaitTimeout(Exception):
     pass
 
 class ZapperSessionNotStarted(Exception):
