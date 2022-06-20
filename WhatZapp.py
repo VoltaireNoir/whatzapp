@@ -35,6 +35,10 @@ class Zapper:
         if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
         if autostart: self.start(persistence,login,headless)
 
+    def __webdriver_check(self):
+        if self.driver is None:
+            raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+
     def start(self,persistence=None, login=None, headless=None):
         if self.driver is not None: return
         if persistence is not None: self.persistence = persistence
@@ -58,9 +62,13 @@ class Zapper:
         if self.login_enabled:
             self.login()
 
-    def __webdriver_check(self):
-        if self.driver is None:
-            raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+    def stop(self):
+        """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
+        if self.driver is not None:
+            self.driver.delete_all_cookies()
+            self.driver.quit()
+            self.driver = None
+            if self.logs: logger("Session stopped")
 
     def login(self):
         """Takes you to WhatsApp login page and waits until login is complete"""
@@ -78,14 +86,6 @@ class Zapper:
         self.wait_for_element(self.path["menu"],60).click()
         self.wait_for_element(self.path["logout1"],60).click()
         self.wait_for_element(self.path["logout2"],60).click()
-
-    def stop(self):
-        """Quits Chrome and ends web-driver session. Zapper needs to be initialized again to use after quitting."""
-        if self.driver is not None:
-            self.driver.delete_all_cookies()
-            self.driver.quit()
-            self.driver = None
-            if self.logs: logger("Session stopped")
 
     def load_target(self, target: str,force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
@@ -110,6 +110,22 @@ class Zapper:
         else:
             return False
 
+    def wait_for_element(self, loc: str, timeout: int, by='xpath'):
+        """
+        Waits until the web eliment becomes accissible on page, then finds the element and returns it.
+        The element is identified using it's xpath by default, unless class_name is specified.
+        """
+        self.__webdriver_check()
+        try:
+            element = WebDriverWait(self.driver, timeout=timeout).until(
+                lambda x: x.find_element(by, loc)
+            )
+        except:
+            raise ElementWaitTimeout(
+                "Either the page didn't load or the target element was not found on the page."
+            )
+        return element
+
     def send(self, message, text_box, count=1):
         """
         Sends given string to the given text_box and sends the message.
@@ -131,22 +147,6 @@ class Zapper:
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
         if self.logs: logger(f"Message sent: {message}")
-
-    def wait_for_element(self, loc: str, timeout: int, by='xpath'):
-        """
-        Waits until the web eliment becomes accissible on page, then finds the element and returns it.
-        The element is identified using it's xpath by default, unless class_name is specified.
-        """
-        self.__webdriver_check()
-        try:
-            element = WebDriverWait(self.driver, timeout=timeout).until(
-                lambda x: x.find_element(by, loc)
-            )
-        except:
-            raise ElementWaitTimeout(
-                "Either the page didn't load or the target element was not found on the page."
-            )
-        return element
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
         """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
@@ -170,6 +170,22 @@ class Zapper:
         text_box = self.wait_for_element(self.path["caption"], timeout)
         self.send(caption, text_box)
         if self.logs: logger(f"Media file ({file_path}) sent to {target}")
+
+    def schedule_message(self,target: str, message: str, day=0,hour=0,minute=0,second=0):
+        """
+        Schedule messages to be sent later. If none of the time related arguments are given, current time is used, meaning that the message will be sent without waiting.
+        If only time related argument passed is for second, current time is used for the rest (i.e. message to be sent at given second of the current minute and hour).
+        Same applies to minute and hour. Example: if hour = 2, the message willl be scueduled to be sent at hour 2 of the current day (2 AM).
+        Note: day, hour, minute, and second parameters are for scheduling given time, and it is not wait time.
+        To clear the schedule or to make any manual changes, you can directly access Zapper.schedule, which is a list. (Example: Zapper.schedule.clear())
+        """
+        if not day: day = datetime.now().day
+        if second and not minute and not hour:
+            minute, hour = datetime.now().minute, datetime.now().hour
+        if minute and not hour:
+            hour = datetime.now().hour
+        year, month = datetime.now().year, datetime.now().month
+        self.schedule.append((target,message,datetime(year,month,day,hour,minute,second)))
 
     def run_schedular(self, schedule: list = []):
         """
@@ -200,22 +216,6 @@ class Zapper:
                 if self.logs: logger(f"Job {i+1} failed.\n  Error occured: {e}")
                 continue
         if self.logs: logger(f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors")
-
-    def schedule_message(self,target: str, message: str, day=0,hour=0,minute=0,second=0):
-        """
-        Schedule messages to be sent later. If none of the time related arguments are given, current time is used, meaning that the message will be sent without waiting.
-        If only time related argument passed is for second, current time is used for the rest (i.e. message to be sent at given second of the current minute and hour).
-        Same applies to minute and hour. Example: if hour = 2, the message willl be scueduled to be sent at hour 2 of the current day (2 AM).
-        Note: day, hour, minute, and second parameters are for scheduling given time, and it is not wait time.
-        To clear the schedule or to make any manual changes, you can directly access Zapper.schedule, which is a list. (Example: Zapper.schedule.clear())
-        """
-        if not day: day = datetime.now().day
-        if second and not minute and not hour:
-            minute, hour = datetime.now().minute, datetime.now().hour
-        if minute and not hour:
-            hour = datetime.now().hour
-        year, month = datetime.now().year, datetime.now().month
-        self.schedule.append((target,message,datetime(year,month,day,hour,minute,second)))
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
