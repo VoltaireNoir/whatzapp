@@ -103,7 +103,7 @@ class Zapper:
         if self.logs: logger(f"Loading target: {target}")
 
     def is_target(self,incoming_sample, target: str) -> bool:
-        """Uses the incoming messages as a sample to check whether they are from the given target number and returns True or False."""
+        """Uses the incoming message as a sample to check whether they are from the given target number and returns True or False."""
         data_id = incoming_sample.get_attribute("data-id")
         if target in data_id:
             return True
@@ -297,7 +297,7 @@ class Zapper:
         shutil.rmtree(self.session_path)
         if self.logs: logger("Cleanup complete")
 
-# Custom exceptions
+# Exceptions
 
 class ResponseWaitTimeout(Exception):
     pass
@@ -310,7 +310,7 @@ class ZapperSessionNotStarted(Exception):
 
 # Example Parsers
 
-def z_parser(response: str, *_):
+def z_parser(response: str):
     """
     A simple parser to be used with the bot (Zapper.deploy_bot())
     This parser only responds to messages using hardcoded replies and nothing else.
@@ -369,6 +369,10 @@ def z_gather(response: str, fields: dict, delimiter=":"):
         return f"Invalid reponse.\nTry {list(fields)[0]}{delimiter} Your Response.\nOr send 'stop' to end this session."
 
 def z_cat_facts(response:str):
+    """
+    A simple parser to be used with Zapper.deploy_bot(). This parser returns a random cat fact from the internet (retreived from catfact.ninja) whenever it receives 'cat' 'fact' or 'cat fact' as user-response.
+    The parser returns the exit message when the user response is "stop".
+    """
     import requests
     response = response.strip().lower()
     if response in ("cat","fact","cat fact"):
