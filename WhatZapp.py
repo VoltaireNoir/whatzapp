@@ -226,7 +226,7 @@ class Zapper:
         return incoming
 
     def wait_for_response(self, old_incoming: list, timeout: int, freq=3):
-        """Uses a list of old_incoming messages for comparison and waits for a new message, and returns it."""
+        """Uses a list of old_incoming messages for comparison and waits for a new message, and returns it. Raises ResponseWaitTimeout if there's no response and the timeout is reached."""
         for _ in range(0, timeout, freq):
             new_incoming = self.get_incoming()
             if old_incoming == []:
@@ -235,7 +235,7 @@ class Zapper:
             elif new_incoming[-1].id != old_incoming[-1].id:
                 return new_incoming[-1].text.split("\n")[0]
             time.sleep(freq)
-        raise ResponseWaitTimeout
+        raise ResponseWaitTimeout("No user response was detected before timeout was reached.")
 
     def deploy_bot(
         self,
