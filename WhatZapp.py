@@ -63,14 +63,12 @@ class Zapper:
             if self.headless:
                 options.add_argument("--headless")
             self.driver = webdriver.Chrome(options=options)
-            if self.headless:
-                self.driver.execute_cdp_cmd(
-                    "Network.setUserAgentOverride", {"userAgent": self.user_agent}
-                )
-            self.driver.delete_all_cookies()
         else:
             self.driver = webdriver.Chrome()
-            self.driver.delete_all_cookies()
+
+        self.driver.execute_cdp_cmd(
+                "Network.setUserAgentOverride", {"userAgent": self.user_agent}
+            )
 
         if self.logs:
             logger("Session started")
@@ -386,7 +384,6 @@ def z_custom(response: str, replies: dict, default_reply: str):
     It takes a dictionary as an argument, which should contain strings of responses/conditions as keys, and their replies as values.
     And a default_reply, which is a string used whenever the target reponds something that isn't within the scope of provided replies.
     Example: {"hi":"Hey, how are you doing?","Who is this?":"I am a bot","Bye":"exit"}
-    Note: The dictionary should be passed wrapped in a list or tuple as an argument to parser_args parameter.
     """
     response = response.strip().lower()
     if response in replies:
