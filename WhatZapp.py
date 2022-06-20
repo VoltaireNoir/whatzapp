@@ -30,6 +30,7 @@ class Zapper:
         self.login_enabled = login
         self.logs = logs
         self.driver = None
+        self.schedule = []
 
         if autostart: self.start(persistence,login,headless)
         if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
@@ -165,26 +166,44 @@ class Zapper:
         self.send(caption, text_box)
         if self.logs: logger(f"Media file ({file_path}) sent to {target}")
 
-    def message_schedular(self, data:list):
+    def run_schedular(self, schedule: list = []):
+        """
+        Schedule multiple or single messages by passing a list with tuples containing (target,message,scheduled time) Here scheduled time is a datetime object.
+        If current time is already past the scheduled time, the job will be executed without waiting.
+        """
         self.__webdriver_check()
-        schedule = sorted(data, key=lambda x: x[2])
+        if not schedule: schedule = self.schedule[:]
+        if schedule: self.schedule = schedule[:]
+        schedule = sorted(schedule, key=lambda x: x[2])
         if self.logs: logger(f"Message schedular started with {len(schedule)} jobs")
         err = 0
         for i, event in enumerate(schedule):
             target, message, schtime = event
             diff = schtime - datetime.now()
             try:
+                if self.logs: logger(f"Starting job {i+1}: target {target}, scheduled {schtime}")
                 if diff.days >= 0:
+                    if self.logs: logger(f"Sleeping for {diff.seconds}s")
                     time.sleep(diff.seconds)
                     self.send_message(target,message)
                 else:
                     self.send_message(target,message)
-                if self.logs: logger(f"Job no.{i+1} complete for target: {target}")
+                if self.logs: logger(f"Job {i+1} completed sucessfully")
+                self.schedule.remove(event)
             except Exception as e:
                 err += 1
-                if self.logs: logger(f"Job no. {i+1} for target {target} failed.\n  Error occured: {e}")
+                if self.logs: logger(f"Job {i+1} failed.\n  Error occured: {e}")
                 continue
         if self.logs: logger(f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors")
+
+    def schedule_message(self,target: str, message: str, day=0,hour=0,minute=0,second=0):
+        if not day: day = datetime.now().day
+        if second and not minute and not hour:
+            minute, hour = datetime.now().minute, datetime.now().hour
+        if minute and not hour:
+            hour = datetime.now().hour
+        year, month = datetime.now().year, datetime.now().month
+        self.schedule.append((target,message,datetime(year,month,day,hour,minute,second)))
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
@@ -266,9 +285,7 @@ class Zapper:
         shutil.rmtree(self.session_path)
         if self.logs: logger("Cleanup complete")
 
-
 # Custom exceptions
-
 
 class ResponseWaitTimeout(Exception):
     pass
@@ -356,6 +373,4 @@ def logger(message:str):
        f.write(logmessage+"\n")
 
 if __name__ == "__main__":
-    data = [("3rd","aa",datetime(2022,6,19,14,25)),("2nd","aa",datetime(2022,6,19,12,25)),("1st","aa",datetime(2022,6,15,12,25)),("4th","aa",datetime(2022,6,20,12,25))]
-    x = Zapper(autostart=False)
-    x.alt_schedular(data=data)
+    pass
