@@ -144,7 +144,7 @@ class Zapper:
             )
         except:
             raise ElementWaitTimeout(
-                "Either the page didn't load or the element was not found on the page."
+                "Either the page didn't load or the target element was not found on the page."
             )
         return element
 
@@ -173,8 +173,8 @@ class Zapper:
 
     def run_schedular(self, schedule: list = []):
         """
-        Schedule multiple or single messages by passing a list with tuples containing (target,message,scheduled time) Here scheduled time is a datetime object.
-        If current time is already past the scheduled time, the job will be executed without waiting.
+        Run already scheduled messages or schedule multiple or single messages by passing a list with tuples containing (target,message,scheduled time) as an argument (Here scheduled time is a datetime object)
+        If current time is already past the scheduled time, the job will be executed without waiting. Only successful jobs are removed from the schedule. Failed ones are kept so that they can be run again.
         """
         self.__webdriver_check()
         if not schedule: schedule = self.schedule[:]
@@ -202,6 +202,13 @@ class Zapper:
         if self.logs: logger(f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors")
 
     def schedule_message(self,target: str, message: str, day=0,hour=0,minute=0,second=0):
+        """
+        Schedule messages to be sent later. If none of the time related arguments are given, current time is used, meaning that the message will be sent without waiting.
+        If only time related argument passed is for second, current time is used for the rest (i.e. message to be sent at given second of the current minute and hour).
+        Same applies to minute and hour. Example: if hour = 2, the message willl be scueduled to be sent at hour 2 of the current day (2 AM).
+        Note: day, hour, minute, and second parameters are for scheduling given time, and it is not wait time.
+        To clear the schedule or to make any manual changes, you can directly access Zapper.schedule, which is a list. (Example: Zapper.schedule.clear())
+        """
         if not day: day = datetime.now().day
         if second and not minute and not hour:
             minute, hour = datetime.now().minute, datetime.now().hour
