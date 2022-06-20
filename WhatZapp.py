@@ -70,11 +70,11 @@ class Zapper:
             self.driver = None
             if self.logs: logger("Session stopped")
 
-    def login(self):
+    def login(self,timeout=180):
         """Takes you to WhatsApp login page and waits until login is complete"""
         self.__webdriver_check()
         self.driver.get("https://web.whatsapp.com/")
-        self.wait_for_element("_3yZPA",180,by="class name")
+        self.wait_for_element("_3yZPA",timeout,by="class name")
         if self.logs: logger("WhatsApp login successful")
         return True
 
