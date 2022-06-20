@@ -19,10 +19,12 @@ class Zapper:
         "caption": '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/div/div[1]/div[3]/div/div/div[2]/div[1]/div[2]',
         "menu": '//*[@id="side"]/header/div[2]/div/span/div[3]/div/span',
         "logout1": '//*[@id="side"]/header/div[2]/div/span/div[3]/span/div/ul/li[4]/div[1]',
-        "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]'
+        "logout2": '//*[@id="app"]/div/span[2]/div/div/div/div/div/div/div[3]/div/div[2]',
     }
 
-    def __init__(self, persistence=False, login=True, headless=False, autostart=True, logs=False):
+    def __init__(
+        self, persistence=False, login=True, headless=False, autostart=True, logs=False
+    ):
 
         self.session_path = os.path.join(os.getcwd(), "session")
         self.persistence = persistence
@@ -32,32 +34,46 @@ class Zapper:
         self.driver = None
         self.schedule = []
 
-        if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
-        if autostart: self.start(persistence,login,headless)
+        if logs:
+            logger(
+                f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}"
+            )
+        if autostart:
+            self.start(persistence, login, headless)
 
     def __webdriver_check(self):
         if self.driver is None:
-            raise ZapperSessionNotStarted("Session needs to be running for this functionality to work.")
+            raise ZapperSessionNotStarted(
+                "Session needs to be running for this functionality to work."
+            )
 
-    def start(self,persistence=None, login=None, headless=None):
-        if self.driver is not None: return
-        if persistence is not None: self.persistence = persistence
-        if login is not None: self.login_enabled = login
-        if headless is not None: self.headless = headless
+    def start(self, persistence=None, login=None, headless=None):
+        if self.driver is not None:
+            return
+        if persistence is not None:
+            self.persistence = persistence
+        if login is not None:
+            self.login_enabled = login
+        if headless is not None:
+            self.headless = headless
 
         if self.persistence:
             options = webdriver.ChromeOptions()
             options.add_argument(f"--user-data-dir={self.session_path}")
-            if self.headless: options.add_argument("--headless")
+            if self.headless:
+                options.add_argument("--headless")
             self.driver = webdriver.Chrome(options=options)
             if self.headless:
-                self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.user_agent})
+                self.driver.execute_cdp_cmd(
+                    "Network.setUserAgentOverride", {"userAgent": self.user_agent}
+                )
             self.driver.delete_all_cookies()
         else:
             self.driver = webdriver.Chrome()
             self.driver.delete_all_cookies()
 
-        if self.logs: logger("Session started")
+        if self.logs:
+            logger("Session started")
 
         if self.login_enabled:
             self.login()
@@ -68,14 +84,16 @@ class Zapper:
             self.driver.delete_all_cookies()
             self.driver.quit()
             self.driver = None
-            if self.logs: logger("Session stopped")
+            if self.logs:
+                logger("Session stopped")
 
-    def login(self,timeout=180):
+    def login(self, timeout=180):
         """Takes you to WhatsApp login page and waits until login is complete"""
         self.__webdriver_check()
         self.driver.get("https://web.whatsapp.com/")
-        self.wait_for_element("_3yZPA",timeout,by="class name")
-        if self.logs: logger("WhatsApp login successful")
+        self.wait_for_element("_3yZPA", timeout, by="class name")
+        if self.logs:
+            logger("WhatsApp login successful")
         return True
 
     def logout(self):
@@ -83,11 +101,11 @@ class Zapper:
         self.__webdriver_check()
         if "web.whatsapp.com" not in self.driver.current_url:
             self.driver.get("https://web.whatsapp.com/")
-        self.wait_for_element(self.path["menu"],60).click()
-        self.wait_for_element(self.path["logout1"],60).click()
-        self.wait_for_element(self.path["logout2"],60).click()
+        self.wait_for_element(self.path["menu"], 60).click()
+        self.wait_for_element(self.path["logout1"], 60).click()
+        self.wait_for_element(self.path["logout2"], 60).click()
 
-    def load_target(self, target: str,force_load=False):
+    def load_target(self, target: str, force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
         self.__webdriver_check()
         if force_load:
@@ -95,14 +113,15 @@ class Zapper:
         # Try to check if already on target page
         incoming = self.get_incoming()
         if incoming != []:
-           if self.is_target(incoming[0],target):
-               return
+            if self.is_target(incoming[0], target):
+                return
         # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
 
-        if self.logs: logger(f"Loading target: {target}")
+        if self.logs:
+            logger(f"Loading target: {target}")
 
-    def is_target(self,incoming_sample, target: str) -> bool:
+    def is_target(self, incoming_sample, target: str) -> bool:
         """Uses the incoming message as a sample to check whether they are from the given target number and returns True or False."""
         data_id = incoming_sample.get_attribute("data-id")
         if target in data_id:
@@ -110,7 +129,7 @@ class Zapper:
         else:
             return False
 
-    def wait_for_element(self, loc: str, timeout: int, by='xpath'):
+    def wait_for_element(self, loc: str, timeout: int, by="xpath"):
         """
         Waits until the web eliment becomes accissible on page, then finds the element and returns it.
         The element is identified using it's xpath by default, unless class_name is specified.
@@ -146,7 +165,8 @@ class Zapper:
             else:
                 text_box.send_keys(message)
                 text_box.send_keys("\n")
-        if self.logs: logger(f"Message sent: {message}")
+        if self.logs:
+            logger(f"Message sent: {message}")
 
     def send_message(self, target: str, message: str, count=1, timeout=60):
         """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
@@ -154,7 +174,8 @@ class Zapper:
         if target:
             self.load_target(target)
         text_box = self.wait_for_element(self.path["text"], timeout)
-        if self.logs: logger(f"Sending message to target: {target}")
+        if self.logs:
+            logger(f"Sending message to target: {target}")
         self.send(message, text_box, count)
         time.sleep(1)
 
@@ -169,9 +190,12 @@ class Zapper:
         self.wait_for_element(self.path["media"], timeout).send_keys(file_path)
         text_box = self.wait_for_element(self.path["caption"], timeout)
         self.send(caption, text_box)
-        if self.logs: logger(f"Media file ({file_path}) sent to {target}")
+        if self.logs:
+            logger(f"Media file ({file_path}) sent to {target}")
 
-    def schedule_message(self,target: str, message: str, day=0,hour=0,minute=0,second=0):
+    def schedule_message(
+        self, target: str, message: str, day=0, hour=0, minute=0, second=0
+    ):
         """
         Schedule messages to be sent later. If none of the time related arguments are given, current time is used, meaning that the message will be sent without waiting.
         If only time related argument passed is for second, current time is used for the rest (i.e. message to be sent at given second of the current minute and hour).
@@ -179,13 +203,16 @@ class Zapper:
         Note: day, hour, minute, and second parameters are for scheduling given time, and it is not wait time.
         To clear the schedule or to make any manual changes, you can directly access Zapper.schedule, which is a list. (Example: Zapper.schedule.clear())
         """
-        if not day: day = datetime.now().day
+        if not day:
+            day = datetime.now().day
         if second and not minute and not hour:
             minute, hour = datetime.now().minute, datetime.now().hour
         if minute and not hour:
             hour = datetime.now().hour
         year, month = datetime.now().year, datetime.now().month
-        self.schedule.append((target,message,datetime(year,month,day,hour,minute,second)))
+        self.schedule.append(
+            (target, message, datetime(year, month, day, hour, minute, second))
+        )
 
     def run_schedular(self, schedule: list = []):
         """
@@ -193,29 +220,39 @@ class Zapper:
         If current time is already past the scheduled time, the job will be executed without waiting. Only successful jobs are removed from the schedule. Failed ones are kept so that they can be run again.
         """
         self.__webdriver_check()
-        if not schedule: schedule = self.schedule[:]
-        if schedule: self.schedule = schedule[:]
+        if not schedule:
+            schedule = self.schedule[:]
+        if schedule:
+            self.schedule = schedule[:]
         schedule = sorted(schedule, key=lambda x: x[2])
-        if self.logs: logger(f"Message schedular started with {len(schedule)} jobs")
+        if self.logs:
+            logger(f"Message schedular started with {len(schedule)} jobs")
         err = 0
         for i, event in enumerate(schedule):
             target, message, schtime = event
             diff = schtime - datetime.now()
             try:
-                if self.logs: logger(f"Starting job {i+1}: target {target}, scheduled {schtime}")
+                if self.logs:
+                    logger(f"Starting job {i+1}: target {target}, scheduled {schtime}")
                 if diff.days >= 0:
-                    if self.logs: logger(f"Sleeping for {diff.seconds}s")
+                    if self.logs:
+                        logger(f"Sleeping for {diff.seconds}s")
                     time.sleep(diff.seconds)
-                    self.send_message(target,message)
+                    self.send_message(target, message)
                 else:
-                    self.send_message(target,message)
-                if self.logs: logger(f"Job {i+1} completed sucessfully")
+                    self.send_message(target, message)
+                if self.logs:
+                    logger(f"Job {i+1} completed sucessfully")
                 self.schedule.remove(event)
             except Exception as e:
                 err += 1
-                if self.logs: logger(f"Job {i+1} failed.\n  Error occured: {e}")
+                if self.logs:
+                    logger(f"Job {i+1} failed.\n  Error occured: {e}")
                 continue
-        if self.logs: logger(f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors")
+        if self.logs:
+            logger(
+                f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors"
+            )
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
@@ -235,7 +272,9 @@ class Zapper:
             elif new_incoming[-1].id != old_incoming[-1].id:
                 return new_incoming[-1].text.split("\n")[0]
             time.sleep(freq)
-        raise ResponseWaitTimeout("No user response was detected before timeout was reached.")
+        raise ResponseWaitTimeout(
+            "No user response was detected before timeout was reached."
+        )
 
     def deploy_bot(
         self,
@@ -260,7 +299,8 @@ class Zapper:
         # Wait and get the message text box
         text_box = self.wait_for_element(self.path["text"], 60)
 
-        if self.logs: logger(f"Deploying bot on target: {target}")
+        if self.logs:
+            logger(f"Deploying bot on target: {target}")
 
         # Send initial prompt message to target
         self.send(prompt, text_box)
@@ -271,7 +311,8 @@ class Zapper:
             user_response = self.wait_for_response(
                 old_incoming, response_timeout, check_freqency
             )
-            if self.logs: logger(f"Message received: {user_response}")
+            if self.logs:
+                logger(f"Message received: {user_response}")
             # Parse and formulate my response
             my_response = parser(user_response, *parser_args)
             # If parser returns exit, end the loop
@@ -286,7 +327,8 @@ class Zapper:
                 case _:
                     self.send(my_response, text_box)
                     old_incoming = self.get_incoming()
-        if self.logs: logger("Bot session ended")
+        if self.logs:
+            logger("Bot session ended")
         return True
 
     def clean_up(self):
@@ -295,20 +337,27 @@ class Zapper:
         """
         self.stop()
         shutil.rmtree(self.session_path)
-        if self.logs: logger("Cleanup complete")
+        if self.logs:
+            logger("Cleanup complete")
+
 
 # Exceptions
+
 
 class ResponseWaitTimeout(Exception):
     pass
 
+
 class ElementWaitTimeout(Exception):
     pass
+
 
 class ZapperSessionNotStarted(Exception):
     pass
 
+
 # Example Parsers
+
 
 def z_parser(response: str):
     """
@@ -317,6 +366,7 @@ def z_parser(response: str):
     The z_parser doesn't take additional arguments, so any arguments passed to parser_args parameter of deploy_bot method will be ignored.
     """
     import random
+
     my_response = ""
     match response.lower():
         case "who is this" | "who is this?" | "who are you?" | "who are you":
@@ -328,6 +378,7 @@ def z_parser(response: str):
         case _:
             my_response = "Sorry, my creator didn't program me to respond to that.\nI am still 0 years old, so please be patient with me."
     return my_response
+
 
 def z_custom(response: str, replies: dict, default_reply: str):
     """
@@ -342,6 +393,7 @@ def z_custom(response: str, replies: dict, default_reply: str):
         return replies[response]
     else:
         return default_reply
+
 
 def z_gather(response: str, fields: dict, delimiter=":"):
     """
@@ -360,7 +412,9 @@ def z_gather(response: str, fields: dict, delimiter=":"):
         if key in fields:
             fields[key] = response
             # Check if responses have been recorded for all provided fields
-            if len([val for val in fields.values() if val != "" or None]) == len(fields):
+            if len([val for val in fields.values() if val != "" or None]) == len(
+                fields
+            ):
                 return "exit", "Responses for all fields have been recorded. Thank you!"
             return f"Your response for '{key}' has been recorded."
     elif response == "stop":
@@ -368,14 +422,16 @@ def z_gather(response: str, fields: dict, delimiter=":"):
     else:
         return f"Invalid reponse.\nTry {list(fields)[0]}{delimiter} Your Response.\nOr send 'stop' to end this session."
 
-def z_cat_facts(response:str):
+
+def z_cat_facts(response: str):
     """
     A simple parser to be used with Zapper.deploy_bot(). This parser returns a random cat fact from the internet (retreived from catfact.ninja) whenever it receives 'cat' 'fact' or 'cat fact' as user-response.
     The parser returns the exit message when the user response is "stop".
     """
     import requests
+
     response = response.strip().lower()
-    if response in ("cat","fact","cat fact"):
+    if response in ("cat", "fact", "cat fact"):
         fact = requests.api.get("https://catfact.ninja/fact").json()
         return f"Here's a cat fact for you:\n{fact['fact']}"
     elif response == "stop":
@@ -383,13 +439,16 @@ def z_cat_facts(response:str):
     else:
         return "You have been chosen to receive cat facts.\nSend 'cat' or 'fact' or 'cat fact' to receive wisdom.\nSend 'stop' to go back to being miserable again."
 
+
 # Logger
 
-def logger(message:str):
-   logmessage = f"LOG [{datetime.now().strftime('%b %d %T')}]: {message}"
-   print(logmessage)
-   with open("z_log",'a') as f:
-       f.write(logmessage+"\n")
+
+def logger(message: str):
+    logmessage = f"LOG [{datetime.now().strftime('%b %d %T')}]: {message}"
+    print(logmessage)
+    with open("z_log", "a") as f:
+        f.write(logmessage + "\n")
+
 
 if __name__ == "__main__":
     pass
