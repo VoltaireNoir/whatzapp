@@ -32,8 +32,8 @@ class Zapper:
         self.driver = None
         self.schedule = []
 
-        if autostart: self.start(persistence,login,headless)
         if logs: logger(f"Zapper Initialized: auto:{autostart}, persist:{persistence}, login:{login}, head:{headless}")
+        if autostart: self.start(persistence,login,headless)
 
     def start(self,persistence=None, login=None, headless=None):
         if self.driver is not None: return
