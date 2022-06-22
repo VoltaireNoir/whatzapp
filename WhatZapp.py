@@ -85,7 +85,7 @@ class Zapper:
         return self.__session_path
 
     @property
-    def headless(self):
+    def headless_mode(self):
         return self.__headless
 
     @property
