@@ -109,9 +109,7 @@ class Zapper:
         if force_load:
             self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Try to check if already on target page
-        incoming = self.get_incoming()
-        if incoming != []:
-            if self.is_target(incoming[0], target):
+        if self.is_target(target):
                 return
         # Load target as usual
         self.driver.get(f"https://web.whatsapp.com/send/?phone={target}")
@@ -119,13 +117,10 @@ class Zapper:
         if self.logs:
             logger(f"Loading target: {target}")
 
-    def is_target(self, incoming_sample, target: str) -> bool:
+    def is_target(self, target: str) -> bool:
         """Uses the incoming message as a sample to check whether they are from the given target number and returns True or False."""
-        data_id = incoming_sample.get_attribute("data-id")
-        if target in data_id:
-            return True
-        else:
-            return False
+        self.__webdriver_check
+        return target in self.driver.page_source
 
     def wait_for_element(self, loc: str, timeout: int, by="xpath"):
         """
