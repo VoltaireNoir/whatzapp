@@ -170,7 +170,7 @@ class Zapper:
         if self.logs:
             logger(f"Sending message to target: {target}")
         self.send(message, text_box, count)
-        time.sleep(1)
+        time.sleep(0.5)
 
     def send_media(self, target: str, file_path: str, caption: str, timeout=60):
         """
@@ -183,6 +183,7 @@ class Zapper:
         self.wait_for_element(self.path["media"], timeout).send_keys(file_path)
         text_box = self.wait_for_element(self.path["caption"], timeout)
         self.send(caption, text_box)
+        time.sleep(0.5)
         if self.logs:
             logger(f"Media file ({file_path}) sent to {target}")
 
@@ -320,6 +321,7 @@ class Zapper:
                 case _:
                     self.send(my_response, text_box)
                     old_incoming = self.get_incoming()
+        time.sleep(0,5)
         if self.logs:
             logger("Bot session ended")
         return True
