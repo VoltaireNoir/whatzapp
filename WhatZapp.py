@@ -345,7 +345,7 @@ class Zapper:
                 case _:
                     self.send(my_response, text_box)
                     old_incoming = self.get_incoming()
-        time.sleep(0,5)
+        time.sleep(0.5)
         if self.__logs:
             logger("Bot session ended")
         return True
