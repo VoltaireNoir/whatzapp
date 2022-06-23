@@ -57,15 +57,18 @@ class Zapper:
         if headless is not None:
             self.__headless = headless
 
-        options = webdriver.ChromeOptions()
-        options.add_argument(f'--user-agent="{self.user_agent}"')
         if self.__persistence:
+            options = webdriver.ChromeOptions()
             options.add_argument(f"--user-data-dir={self.__session_path}")
             if self.__headless:
                 options.add_argument("--headless")
             self.__driver = webdriver.Chrome(options=options)
         else:
-            self.__driver = webdriver.Chrome(options=options)
+            self.__driver = webdriver.Chrome()
+
+        self.__driver.execute_cdp_cmd(
+                "Network.setUserAgentOverride", {"userAgent": self.user_agent}
+            )
 
         if self.__logs:
             logger("Session started")
