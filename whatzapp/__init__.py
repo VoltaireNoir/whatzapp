@@ -2,4 +2,5 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .zapper import Zapper
+from .zapper import Zapper, logger
+from .parsers import parsers
