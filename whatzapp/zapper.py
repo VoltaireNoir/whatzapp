@@ -67,14 +67,16 @@ class Zapper:
             self.__driver = webdriver.Chrome()
 
         self.__driver.execute_cdp_cmd(
-                "Network.setUserAgentOverride", {"userAgent": self.user_agent}
-            )
+            "Network.setUserAgentOverride", {"userAgent": self.user_agent}
+        )
 
         if self.__logs:
             logger("Session started")
 
         if self.__login_enabled:
             self.login()
+
+        return self
 
     @property
     def persistence(self):
@@ -109,6 +111,8 @@ class Zapper:
             if self.__logs:
                 logger("Session stopped")
 
+        return self
+
     def login(self, timeout=180):
         """Takes you to WhatsApp login page and waits until login is complete"""
         self.__webdriver_check()
@@ -127,6 +131,8 @@ class Zapper:
         self.wait_for_element(self.path["logout1"], 60).click()
         self.wait_for_element(self.path["logout2"], 60).click()
 
+        return self
+
     def load_target(self, target: str, force_load=False):
         """Loads target number's WhatsApp chat if not already open. Won't work without country code."""
         self.__webdriver_check()
@@ -134,12 +140,14 @@ class Zapper:
             self.__driver.get(f"https://web.whatsapp.com/send/?phone={target}")
         # Try to check if already on target page
         if self.is_target(target):
-                return
+            return
         # Load target as usual
         self.__driver.get(f"https://web.whatsapp.com/send/?phone={target}")
 
         if self.__logs:
             logger(f"Loading target: {target}")
+
+        return self
 
     def is_target(self, target: str) -> bool:
         """Uses the incoming message as a sample to check whether they are from the given target number and returns True or False."""
@@ -185,6 +193,8 @@ class Zapper:
         if self.__logs:
             logger(f"Message sent: {message}")
 
+        return self
+
     def send_message(self, target: str, message: str, count=1, timeout=60):
         """Loads target chat and sends them the message. Target can be an empty string or None object if target chat is already open."""
         self.__webdriver_check()
@@ -195,6 +205,8 @@ class Zapper:
             logger(f"Sending message to target: {target}")
         self.send(message, text_box, count)
         time.sleep(0.5)
+
+        return self
 
     def send_media(self, target: str, file_path: str, caption: str, timeout=60):
         """
@@ -210,6 +222,8 @@ class Zapper:
         time.sleep(0.5)
         if self.__logs:
             logger(f"Media file ({file_path}) sent to {target}")
+
+        return self
 
     def schedule_message(
         self, target: str, message: str, day=0, hour=0, minute=0, second=0
@@ -231,6 +245,8 @@ class Zapper:
         self.schedule.append(
             (target, message, datetime(year, month, day, hour, minute, second))
         )
+
+        return self
 
     def run_schedular(self, schedule: list = []):
         """
@@ -271,6 +287,8 @@ class Zapper:
             logger(
                 f"Schedular finished: {len(schedule) - err} jobs completed with {err} errors"
             )
+
+        return self
 
     def get_incoming(self):
         """Gets all the available incoming messages on the chat page and returns them in a list."""
@@ -359,6 +377,8 @@ class Zapper:
         if self.__logs:
             logger("Cleanup complete")
 
+        return self
+
 
 # Exceptions
 
@@ -373,6 +393,7 @@ class ElementWaitTimeout(Exception):
 
 class ZapperSessionNotStarted(Exception):
     pass
+
 
 # Logger
 
